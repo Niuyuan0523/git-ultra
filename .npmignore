@@ -1,0 +1,43 @@
+# Source files
+src/
+*.ts
+
+# Build output (we only want dist/)
+*.js.map
+*.d.ts.map
+
+# Config files
+tsconfig.json
+.env
+.env.example
+.env.*.local
+
+# Documentation
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules/
+
+# Misc
+package-lock.json
