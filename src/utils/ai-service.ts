@@ -207,16 +207,42 @@ async function generateWithGitHub(diff: string): Promise<string | null> {
       return null;
     }
 
-    const systemPrompt = `你是一个专业的Git提交信息生成助手。请根据代码变更生成符合以下规范的提交信息：
+    const systemPrompt = `你是一个专业的Git提交信息生成助手。请根据代码变更生成符合 Conventional Commits 规范的提交信息。
 
-1. 使用 Conventional Commits 规范
-2. 格式: <type>(<scope>): <subject>
-3. type 包括: feat, fix, docs, style, refactor, test, chore
-4. subject 简明扼要，不超过50个字符
-5. 如果有必要，添加详细的body说明
-6. 使用中文
+## 格式要求
 
-请只返回提交信息，不要添加任何其他内容。`;
+**标题行（必须）：**
+- 格式: <type>(<scope>): <subject>
+- type 必须是以下之一: feat, fix, docs, style, refactor, test, chore, perf
+- scope 是可选的，用小括号抱裹，如: feat(auth): xxx
+- subject 简明扼要，不超过50个字符，使用中文
+
+**正文（可选但推荐）：**
+- 空一行后写详细说明
+- 使用条目式列出主要变更（- 或 * 开头）
+- 每条说明简明扼要，突出重点
+- 使用中文
+
+**页脚（可选）：**
+- 如果有相关的 Issue 或 Breaking Change，在末尾添加
+- 如: Closes #123 或 BREAKING CHANGE: xxx
+
+## 示例
+
+feat(auth): 添加用户认证服务
+
+- 实现用户登录功能，支持用户名密码验证
+- 添加用户登出功能
+- 实现 Token 刷新机制
+
+Closes #123
+
+## 注意事项
+
+- 只返回提交信息，不要添加任何解释
+- 不要使用代码块标记
+- 确保格式严格符合规范
+- 使用中文描述`;
 
     const userPrompt = `请分析以下代码变更，并生成合适的提交信息：
 
@@ -249,14 +275,24 @@ ${diff.substring(0, 3000)}
     if (response.data.choices && response.data.choices.length > 0) {
       let commitMessage = response.data.choices[0].message.content.trim();
       
+      console.log(chalk.green('✓ GitHub Models 调用成功'));
+      console.log(chalk.gray(`原始返回内容长度: ${commitMessage.length} 字符`));
+      
       // 移除可能的代码块标记
       commitMessage = commitMessage.replace(/```[\s\S]*?```/g, '').trim();
       commitMessage = commitMessage.replace(/^`+|`+$/g, '').trim();
       
-      console.log(chalk.green('✓ GitHub Models 调用成功'));
+      if (!commitMessage) {
+        console.error(chalk.red('❌ AI 返回的内容为空'));
+        console.log(chalk.yellow('💡 可能是 diff 内容为空或太短'));
+        return null;
+      }
+      
+      console.log(chalk.gray(`处理后内容长度: ${commitMessage.length} 字符`));
       return commitMessage;
     }
 
+    console.error(chalk.red('❌ AI 返回格式不正确'));
     return null;
   } catch (error: any) {
     console.error(chalk.red('❌ GitHub Models 调用失败:'));
